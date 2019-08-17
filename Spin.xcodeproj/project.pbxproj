@@ -12,7 +12,6 @@
 		7452CD62230632BF00036AA8 /* Spin.h in Headers */ = {isa = PBXBuildFile; fileRef = 7452CD54230632BF00036AA8 /* Spin.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7452CD6C230632D700036AA8 /* Producer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7452CD6B230632D700036AA8 /* Producer.swift */; };
 		7452CD6E230632FC00036AA8 /* Consumable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7452CD6D230632FC00036AA8 /* Consumable.swift */; };
-		7452CD722306360900036AA8 /* Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7452CD712306360900036AA8 /* Stream.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,7 +33,6 @@
 		7452CD61230632BF00036AA8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7452CD6B230632D700036AA8 /* Producer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Producer.swift; sourceTree = "<group>"; };
 		7452CD6D230632FC00036AA8 /* Consumable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Consumable.swift; sourceTree = "<group>"; };
-		7452CD712306360900036AA8 /* Stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stream.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,7 +79,6 @@
 				7452CD55230632BF00036AA8 /* Info.plist */,
 				7452CD6D230632FC00036AA8 /* Consumable.swift */,
 				7452CD6B230632D700036AA8 /* Producer.swift */,
-				7452CD712306360900036AA8 /* Stream.swift */,
 			);
 			path = Spin;
 			sourceTree = "<group>";
@@ -205,7 +202,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				7452CD6E230632FC00036AA8 /* Consumable.swift in Sources */,
-				7452CD722306360900036AA8 /* Stream.swift in Sources */,
 				7452CD6C230632D700036AA8 /* Producer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
