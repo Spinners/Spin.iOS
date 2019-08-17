@@ -10,6 +10,9 @@
 		7452CD5B230632BF00036AA8 /* Spin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7452CD51230632BF00036AA8 /* Spin.framework */; };
 		7452CD60230632BF00036AA8 /* SpinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7452CD5F230632BF00036AA8 /* SpinTests.swift */; };
 		7452CD62230632BF00036AA8 /* Spin.h in Headers */ = {isa = PBXBuildFile; fileRef = 7452CD54230632BF00036AA8 /* Spin.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7452CD6C230632D700036AA8 /* Producer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7452CD6B230632D700036AA8 /* Producer.swift */; };
+		7452CD6E230632FC00036AA8 /* Consumable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7452CD6D230632FC00036AA8 /* Consumable.swift */; };
+		7452CD722306360900036AA8 /* Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7452CD712306360900036AA8 /* Stream.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,6 +32,9 @@
 		7452CD5A230632BF00036AA8 /* SpinTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpinTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7452CD5F230632BF00036AA8 /* SpinTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpinTests.swift; sourceTree = "<group>"; };
 		7452CD61230632BF00036AA8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7452CD6B230632D700036AA8 /* Producer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Producer.swift; sourceTree = "<group>"; };
+		7452CD6D230632FC00036AA8 /* Consumable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Consumable.swift; sourceTree = "<group>"; };
+		7452CD712306360900036AA8 /* Stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stream.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +79,9 @@
 			children = (
 				7452CD54230632BF00036AA8 /* Spin.h */,
 				7452CD55230632BF00036AA8 /* Info.plist */,
+				7452CD6D230632FC00036AA8 /* Consumable.swift */,
+				7452CD6B230632D700036AA8 /* Producer.swift */,
+				7452CD712306360900036AA8 /* Stream.swift */,
 			);
 			path = Spin;
 			sourceTree = "<group>";
@@ -148,6 +157,7 @@
 				TargetAttributes = {
 					7452CD50230632BF00036AA8 = {
 						CreatedOnToolsVersion = 10.2.1;
+						LastSwiftMigration = 1020;
 					};
 					7452CD59230632BF00036AA8 = {
 						CreatedOnToolsVersion = 10.2.1;
@@ -194,6 +204,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7452CD6E230632FC00036AA8 /* Consumable.swift in Sources */,
+				7452CD722306360900036AA8 /* Stream.swift in Sources */,
+				7452CD6C230632D700036AA8 /* Producer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -341,6 +354,7 @@
 		7452CD66230632BF00036AA8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
@@ -358,6 +372,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = io.warpfactor.Spin;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -366,6 +381,7 @@
 		7452CD67230632BF00036AA8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
@@ -391,6 +407,7 @@
 		7452CD69230632BF00036AA8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3V5265LQM9;
 				INFOPLIST_FILE = SpinTests/Info.plist;
@@ -409,6 +426,7 @@
 		7452CD6A230632BF00036AA8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3V5265LQM9;
 				INFOPLIST_FILE = SpinTests/Info.plist;
