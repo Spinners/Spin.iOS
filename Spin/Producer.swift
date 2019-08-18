@@ -12,15 +12,25 @@ public protocol Producer {
     associatedtype Context
     associatedtype Runtime
 
-    static func from(function: () -> Input) -> AnyProducer<Input.Input, Value, Context, Runtime>
+    static func from(function: () -> Self) -> AnyProducer<Input, Value, Context, Runtime>
     func compose<Output: Producer>(function: (Input) -> Output) -> AnyProducer<Output.Input, Output.Value, Output.Context, Output.Runtime>
     func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Context, Runtime>
     func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Context, Runtime>
 }
 
 public extension Producer {
-    static func from(function: () -> Input) -> AnyProducer<Input.Input, Value, Context, Runtime> {
+    static func from(function: () -> Self) -> AnyProducer<Input, Value, Context, Runtime> {
         return function().eraseToAnyProducer()
+    }
+}
+
+public extension Producer {
+    func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result, spies: (Result, Value) -> Void...) -> AnyConsumable<Result, Context, Runtime> {
+        let spiedReducer: (Result, Value) -> Result = { (result, value) -> Result in
+            spies.forEach { $0(result, value) }
+            return reducer(result, value)
+        }
+        return self.scan(initial: value, reducer: spiedReducer)
     }
 }
 
@@ -62,7 +72,7 @@ final class ProducerWrapper<ProducerType: Producer>: AbstractProducer<ProducerTy
         return self.producer.compose(function: function)
     }
 
-    override func scan<Result>(initial value: Result, reducer: @escaping (Result, ProducerType.Value) -> Result) -> AnyConsumable<Result, Context, Runtime> {
+    override func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Context, Runtime> {
         return self.producer.scan(initial: value, reducer: reducer)
     }
 
