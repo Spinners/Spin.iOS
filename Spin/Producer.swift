@@ -7,20 +7,20 @@
 //
 
 public protocol Producer {
-    associatedtype Input: Producer where Input.Value == Value
+    associatedtype Input: Producer where Input.Value == Value, Input.Context == Context, Input.Runtime == Runtime
     associatedtype Value
     associatedtype Context
     associatedtype Runtime
 
-    static func from(function: () -> Input ) -> AnyProducer<Input, Value, Context, Runtime>
+    static func from(function: () -> Input) -> AnyProducer<Input.Input, Value, Context, Runtime>
     func compose<Output: Producer>(function: (Input) -> Output) -> AnyProducer<Output.Input, Output.Value, Output.Context, Output.Runtime>
     func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Context, Runtime>
     func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Context, Runtime>
 }
 
 public extension Producer {
-    static func from(function: () -> Input ) -> AnyProducer<Input, Value, Context, Runtime> {
-        return function().eraseToAnyProducer() as! AnyProducer<Self.Input, Self.Value, Self.Context, Self.Runtime>
+    static func from(function: () -> Input) -> AnyProducer<Input.Input, Value, Context, Runtime> {
+        return function().eraseToAnyProducer()
     }
 }
 
@@ -30,7 +30,9 @@ public extension Producer {
     }
 }
 
-class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractContext, AbstractRuntime>: Producer where AbstractInput.Value == AbstractValue {
+class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractContext, AbstractRuntime>: Producer where    AbstractInput.Value == AbstractValue,
+                                                                                                                    AbstractInput.Context == AbstractContext,
+                                                                                                                    AbstractInput.Runtime == AbstractRuntime {
     typealias Input = AbstractInput
     typealias Value = AbstractValue
     typealias Context = AbstractContext
@@ -69,7 +71,9 @@ final class ProducerWrapper<ProducerType: Producer>: AbstractProducer<ProducerTy
     }
 }
 
-public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRuntime>: Producer where AnyInput.Value == AnyValue {
+public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRuntime>: Producer where    AnyInput.Value == AnyValue,
+                                                                                                        AnyInput.Context == AnyContext,
+                                                                                                        AnyInput.Runtime == AnyRuntime {
     public typealias Input = AnyInput
     public typealias Value = AnyValue
     public typealias Context = AnyContext
