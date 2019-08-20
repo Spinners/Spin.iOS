@@ -16,6 +16,7 @@ public protocol Producer {
     func compose<Output: Producer>(function: (Input) -> Output) -> AnyProducer<Output.Input, Output.Value, Output.Context, Output.Runtime>
     func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Context, Runtime>
     func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Context, Runtime>
+    func toStream() -> Input
 }
 
 public extension Producer {
@@ -59,6 +60,10 @@ class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractContext, 
     func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Context, Runtime> {
         fatalError("must implement")
     }
+    
+    func toStream() -> AbstractInput {
+        fatalError("must implement")
+    }
 }
 
 final class ProducerWrapper<ProducerType: Producer>: AbstractProducer<ProducerType.Input, ProducerType.Value, ProducerType.Context, ProducerType.Runtime> {
@@ -78,6 +83,10 @@ final class ProducerWrapper<ProducerType: Producer>: AbstractProducer<ProducerTy
 
     override func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Context, Runtime> {
         return self.producer.spy(function: function)
+    }
+    
+    override func toStream() -> Input {
+        return self.producer.toStream()
     }
 }
 
@@ -108,5 +117,9 @@ public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRunt
 
     public func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Context, Runtime> {
         return self.producer.spy(function: function)
+    }
+    
+    public func toStream() -> Input {
+        return self.producer.toStream()
     }
 }
