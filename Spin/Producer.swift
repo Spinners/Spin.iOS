@@ -6,17 +6,13 @@
 //  Copyright © 2019 WarpFactor. All rights reserved.
 //
 
-public protocol Producer {
-    associatedtype Input: Producer where Input.Value == Value, Input.Context == Context, Input.Runtime == Runtime
-    associatedtype Value
-    associatedtype Context
-    associatedtype Runtime
-
+public protocol Producer: ReactiveStream where Input: Producer {
     static func from(function: () -> Self) -> AnyProducer<Input, Value, Context, Runtime>
     func compose<Output: Producer>(function: (Input) -> Output) -> AnyProducer<Output.Input, Output.Value, Output.Context, Output.Runtime>
-    func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Context, Runtime>
+    func scan<Output: Consumable, Result>(initial value: Result,
+                                          reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Output, Output.Value, Output.Context, Output.Runtime>
+        where Output.Value == Result, Output.Context == Input.Context, Output.Runtime == Input.Runtime
     func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Context, Runtime>
-    func toStream() -> Input
 }
 
 public extension Producer {
@@ -26,7 +22,10 @@ public extension Producer {
 }
 
 public extension Producer {
-    func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result, spies: (Result, Value) -> Void...) -> AnyConsumable<Result, Context, Runtime> {
+    func scan<Output: Consumable, Result>(initial value: Result,
+                                          reducer: @escaping (Result, Value) -> Result,
+                                          spies: (Result, Value) -> Void...) -> AnyConsumable<Output, Output.Value, Output.Context, Output.Runtime>
+        where Output.Value == Result, Output.Context == Input.Context, Output.Runtime == Input.Runtime {
         let spiedReducer: (Result, Value) -> Result = { (result, value) -> Result in
             spies.forEach { $0(result, value) }
             return reducer(result, value)
@@ -41,9 +40,8 @@ public extension Producer {
     }
 }
 
-class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractContext, AbstractRuntime>: Producer where    AbstractInput.Value == AbstractValue,
-                                                                                                                    AbstractInput.Context == AbstractContext,
-                                                                                                                    AbstractInput.Runtime == AbstractRuntime {
+class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractContext, AbstractRuntime>: Producer
+    where AbstractInput.Value == AbstractValue, AbstractInput.Context == AbstractContext, AbstractInput.Runtime == AbstractRuntime {
     typealias Input = AbstractInput
     typealias Value = AbstractValue
     typealias Context = AbstractContext
@@ -53,7 +51,7 @@ class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractContext, 
         fatalError("must implement")
     }
 
-    func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Context, Runtime> {
+    func scan<Output: Consumable, Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Output, Output.Value, Output.Context, Output.Runtime> where Output.Value == Result {
         fatalError("must implement")
     }
 
@@ -61,7 +59,7 @@ class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractContext, 
         fatalError("must implement")
     }
     
-    func toStream() -> AbstractInput {
+    func toReactiveStream() -> Input {
         fatalError("must implement")
     }
 }
@@ -77,7 +75,8 @@ final class ProducerWrapper<ProducerType: Producer>: AbstractProducer<ProducerTy
         return self.producer.compose(function: function)
     }
 
-    override func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Context, Runtime> {
+    override func scan<Output: Consumable, Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Output, Output.Value, Output.Context, Output.Runtime>
+        where Output.Value == Result, Output.Context == Input.Context, Output.Runtime == Input.Runtime {
         return self.producer.scan(initial: value, reducer: reducer)
     }
 
@@ -85,14 +84,13 @@ final class ProducerWrapper<ProducerType: Producer>: AbstractProducer<ProducerTy
         return self.producer.spy(function: function)
     }
     
-    override func toStream() -> Input {
-        return self.producer.toStream()
+    override func toReactiveStream() -> Input {
+        return self.producer.toReactiveStream()
     }
 }
 
-public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRuntime>: Producer where    AnyInput.Value == AnyValue,
-                                                                                                        AnyInput.Context == AnyContext,
-                                                                                                        AnyInput.Runtime == AnyRuntime {
+public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRuntime>: Producer
+    where AnyInput.Value == AnyValue, AnyInput.Context == AnyContext, AnyInput.Runtime == AnyRuntime {
     public typealias Input = AnyInput
     public typealias Value = AnyValue
     public typealias Context = AnyContext
@@ -100,10 +98,8 @@ public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRunt
 
     private let producer: AbstractProducer<Input, Value, Context, Runtime>
 
-    init<ProducerType: Producer>(producer: ProducerType) where  ProducerType.Input == Input,
-                                                                ProducerType.Value == Value,
-                                                                ProducerType.Context == Context,
-                                                                ProducerType.Runtime == Runtime {
+    init<ProducerType: Producer>(producer: ProducerType)
+        where ProducerType.Input == Input, ProducerType.Value == Value, ProducerType.Context == Context, ProducerType.Runtime == Runtime {
         self.producer = ProducerWrapper(producer: producer)
     }
 
@@ -111,7 +107,9 @@ public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRunt
         return self.producer.compose(function: function)
     }
 
-    public func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Context, Runtime> {
+    public func scan<Output: Consumable, Result>(initial value: Result,
+                                                 reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Output, Output.Value, Output.Context, Output.Runtime>
+        where Output.Value == Result, Output.Context == Input.Context, Output.Runtime == Input.Runtime {
         return self.producer.scan(initial: value, reducer: reducer)
     }
 
@@ -119,7 +117,7 @@ public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRunt
         return self.producer.spy(function: function)
     }
     
-    public func toStream() -> Input {
-        return self.producer.toStream()
+    public func toReactiveStream() -> Input {
+        return self.producer.toReactiveStream()
     }
 }

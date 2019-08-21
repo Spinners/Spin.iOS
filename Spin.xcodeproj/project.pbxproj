@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A657E30230E0564008055B0 /* ReactiveStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A657E2F230E0564008055B0 /* ReactiveStream.swift */; };
 		7452CD5B230632BF00036AA8 /* Spin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7452CD51230632BF00036AA8 /* Spin.framework */; };
 		7452CD60230632BF00036AA8 /* SpinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7452CD5F230632BF00036AA8 /* SpinTests.swift */; };
 		7452CD62230632BF00036AA8 /* Spin.h in Headers */ = {isa = PBXBuildFile; fileRef = 7452CD54230632BF00036AA8 /* Spin.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -25,6 +26,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1A657E2F230E0564008055B0 /* ReactiveStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactiveStream.swift; sourceTree = "<group>"; };
 		7452CD51230632BF00036AA8 /* Spin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Spin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7452CD54230632BF00036AA8 /* Spin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Spin.h; sourceTree = "<group>"; };
 		7452CD55230632BF00036AA8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -79,6 +81,7 @@
 				7452CD55230632BF00036AA8 /* Info.plist */,
 				7452CD6D230632FC00036AA8 /* Consumable.swift */,
 				7452CD6B230632D700036AA8 /* Producer.swift */,
+				1A657E2F230E0564008055B0 /* ReactiveStream.swift */,
 			);
 			path = Spin;
 			sourceTree = "<group>";
@@ -167,6 +170,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 7452CD47230632BF00036AA8;
 			productRefGroup = 7452CD52230632BF00036AA8 /* Products */;
@@ -202,6 +206,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7452CD6E230632FC00036AA8 /* Consumable.swift in Sources */,
+				1A657E30230E0564008055B0 /* ReactiveStream.swift in Sources */,
 				7452CD6C230632D700036AA8 /* Producer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
