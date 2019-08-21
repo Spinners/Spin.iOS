@@ -12,7 +12,7 @@ public protocol Consumable {
     associatedtype Runtime
 
     func consume(by: @escaping (Value) -> Void, on: Context) -> AnyConsumable<Value, Context, Runtime>
-    func engage() -> Runtime
+    func spin() -> Runtime
 }
 
 public extension Consumable {
@@ -30,7 +30,7 @@ class AbstractConsumable<AbstractValue, AbstractContext, AbstractRuntime>: Consu
         fatalError("must implement")
     }
 
-    func engage() -> Runtime {
+    func spin() -> Runtime {
         fatalError("must implement")
     }
 }
@@ -47,8 +47,8 @@ final class ConsumableWrapper<ConsumableType: Consumable>: AbstractConsumable<Co
         return self.consumable.consume(by: by, on: on)
     }
 
-    override func engage() -> ConsumableType.Runtime {
-        return self.consumable.engage()
+    override func spin() -> ConsumableType.Runtime {
+        return self.consumable.spin()
     }
 }
 
@@ -69,7 +69,7 @@ public final class AnyConsumable<AnyValue, AnyContext, AnyRuntime>: Consumable {
         return self.consumable.consume(by: by, on: on)
     }
 
-    public func engage() -> Runtime {
-        return self.consumable.engage()
+    public func spin() -> Runtime {
+        return self.consumable.spin()
     }
 }
