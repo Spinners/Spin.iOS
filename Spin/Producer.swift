@@ -6,17 +6,14 @@
 //  Copyright © 2019 WarpFactor. All rights reserved.
 //
 
-public protocol Producer {
+public protocol Producer: ReactiveStream {
     associatedtype Input: Producer where Input.Value == Value, Input.Context == Context, Input.Runtime == Runtime
-    associatedtype Value
-    associatedtype Context
-    associatedtype Runtime
 
     static func from(function: () -> Self) -> AnyProducer<Input, Value, Context, Runtime>
     func compose<Output: Producer>(function: (Input) -> Output) -> AnyProducer<Output.Input, Output.Value, Output.Context, Output.Runtime>
     func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Context, Runtime>
     func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Context, Runtime>
-    func toStream() -> Input
+    func toReactiveStream() -> Input
 }
 
 public extension Producer {
@@ -41,9 +38,8 @@ public extension Producer {
     }
 }
 
-class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractContext, AbstractRuntime>: Producer where    AbstractInput.Value == AbstractValue,
-                                                                                                                    AbstractInput.Context == AbstractContext,
-                                                                                                                    AbstractInput.Runtime == AbstractRuntime {
+class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractContext, AbstractRuntime>: Producer
+    where AbstractInput.Value == AbstractValue, AbstractInput.Context == AbstractContext, AbstractInput.Runtime == AbstractRuntime {
     typealias Input = AbstractInput
     typealias Value = AbstractValue
     typealias Context = AbstractContext
@@ -61,7 +57,7 @@ class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractContext, 
         fatalError("must implement")
     }
     
-    func toStream() -> AbstractInput {
+    func toReactiveStream() -> AbstractInput {
         fatalError("must implement")
     }
 }
@@ -85,14 +81,13 @@ final class ProducerWrapper<ProducerType: Producer>: AbstractProducer<ProducerTy
         return self.producer.spy(function: function)
     }
     
-    override func toStream() -> Input {
-        return self.producer.toStream()
+    override func toReactiveStream() -> Input {
+        return self.producer.toReactiveStream()
     }
 }
 
-public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRuntime>: Producer where    AnyInput.Value == AnyValue,
-                                                                                                        AnyInput.Context == AnyContext,
-                                                                                                        AnyInput.Runtime == AnyRuntime {
+public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRuntime>: Producer
+    where AnyInput.Value == AnyValue, AnyInput.Context == AnyContext, AnyInput.Runtime == AnyRuntime {
     public typealias Input = AnyInput
     public typealias Value = AnyValue
     public typealias Context = AnyContext
@@ -100,10 +95,8 @@ public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRunt
 
     private let producer: AbstractProducer<Input, Value, Context, Runtime>
 
-    init<ProducerType: Producer>(producer: ProducerType) where  ProducerType.Input == Input,
-                                                                ProducerType.Value == Value,
-                                                                ProducerType.Context == Context,
-                                                                ProducerType.Runtime == Runtime {
+    init<ProducerType: Producer>(producer: ProducerType)
+        where  ProducerType.Input == Input, ProducerType.Value == Value, ProducerType.Context == Context, ProducerType.Runtime == Runtime {
         self.producer = ProducerWrapper(producer: producer)
     }
 
@@ -119,7 +112,7 @@ public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRunt
         return self.producer.spy(function: function)
     }
     
-    public func toStream() -> Input {
-        return self.producer.toStream()
+    public func toReactiveStream() -> Input {
+        return self.producer.toReactiveStream()
     }
 }

@@ -6,11 +6,7 @@
 //  Copyright © 2019 WarpFactor. All rights reserved.
 //
 
-public protocol Consumable {
-    associatedtype Value
-    associatedtype Context
-    associatedtype Runtime
-
+public protocol Consumable: ReactiveStream {
     func consume(by: @escaping (Value) -> Void, on: Context) -> AnyConsumable<Value, Context, Runtime>
     func spin() -> Runtime
 }
@@ -59,9 +55,8 @@ public final class AnyConsumable<AnyValue, AnyContext, AnyRuntime>: Consumable {
 
     private let consumable: AbstractConsumable<Value, Context, Runtime>
 
-    init<ConsumableType: Consumable>(consumable: ConsumableType) where  ConsumableType.Value == Value,
-                                                                        ConsumableType.Context == AnyContext,
-                                                                        ConsumableType.Runtime == AnyRuntime {
+    init<ConsumableType: Consumable>(consumable: ConsumableType)
+        where ConsumableType.Value == Value, ConsumableType.Context == AnyContext,  ConsumableType.Runtime == AnyRuntime {
         self.consumable = ConsumableWrapper(consumable: consumable)
     }
 
