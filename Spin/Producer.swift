@@ -9,7 +9,7 @@
 public protocol Producer: ReactiveStream {
     associatedtype Input: Producer where Input.Value == Value, Input.Context == Context, Input.Runtime == Runtime
 
-    static func from(function: () -> Self) -> AnyProducer<Input, Value, Context, Runtime>
+    static func from(function: () -> Input) -> AnyProducer<Input.Input, Value, Context, Runtime>
     func compose<Output: Producer>(function: (Input) -> Output) -> AnyProducer<Output.Input, Output.Value, Output.Context, Output.Runtime>
     func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Context, Runtime>
     func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Context, Runtime>
@@ -17,7 +17,7 @@ public protocol Producer: ReactiveStream {
 }
 
 public extension Producer {
-    static func from(function: () -> Self) -> AnyProducer<Input, Value, Context, Runtime> {
+    static func from(function: () -> Input) -> AnyProducer<Input.Input, Value, Context, Runtime> {
         return function().eraseToAnyProducer()
     }
 }
