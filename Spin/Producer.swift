@@ -23,12 +23,12 @@ public extension Producer {
 }
 
 public extension Producer {
-    func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result, spies: (Result, Value) -> Void...) -> AnyConsumable<Result, Context, Runtime> {
-        let spiedReducer: (Result, Value) -> Result = { (result, value) -> Result in
-            spies.forEach { $0(result, value) }
+    func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result, middlewares: (Result, Value) -> Void...) -> AnyConsumable<Result, Context, Runtime> {
+        let middlewaresAndReducer: (Result, Value) -> Result = { (result, value) -> Result in
+            middlewares.forEach { $0(result, value) }
             return reducer(result, value)
         }
-        return self.scan(initial: value, reducer: spiedReducer)
+        return self.scan(initial: value, reducer: middlewaresAndReducer)
     }
 }
 
