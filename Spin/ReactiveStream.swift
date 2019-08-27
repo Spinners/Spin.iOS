@@ -8,6 +8,6 @@
 
 public protocol ReactiveStream {
     associatedtype Value
-    associatedtype Context
-    associatedtype Runtime
+    associatedtype Executer
+    associatedtype Lifecycle
 }

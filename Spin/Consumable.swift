@@ -7,31 +7,31 @@
 //
 
 public protocol Consumable: ReactiveStream {
-    func consume(by: @escaping (Value) -> Void, on: Context) -> AnyConsumable<Value, Context, Runtime>
-    func spin() -> Runtime
+    func consume(by: @escaping (Value) -> Void, on: Executer) -> AnyConsumable<Value, Executer, Lifecycle>
+    func spin() -> Lifecycle
 }
 
 public extension Consumable {
-    func eraseToAnyConsumable() -> AnyConsumable<Value, Context, Runtime> {
+    func eraseToAnyConsumable() -> AnyConsumable<Value, Executer, Lifecycle> {
         return AnyConsumable(consumable: self)
     }
 }
 
 class AbstractConsumable<AbstractValue, AbstractContext, AbstractRuntime>: Consumable {
     typealias Value = AbstractValue
-    typealias Context = AbstractContext
-    typealias Runtime = AbstractRuntime
+    typealias Executer = AbstractContext
+    typealias Lifecycle = AbstractRuntime
 
-    func consume(by: @escaping (Value) -> Void, on: Context) -> AnyConsumable<Value, Context, Runtime> {
+    func consume(by: @escaping (Value) -> Void, on: Executer) -> AnyConsumable<Value, Executer, Lifecycle> {
         fatalError("must implement")
     }
 
-    func spin() -> Runtime {
+    func spin() -> Lifecycle {
         fatalError("must implement")
     }
 }
 
-final class ConsumableWrapper<ConsumableType: Consumable>: AbstractConsumable<ConsumableType.Value, ConsumableType.Context, ConsumableType.Runtime> {
+final class ConsumableWrapper<ConsumableType: Consumable>: AbstractConsumable<ConsumableType.Value, ConsumableType.Executer, ConsumableType.Lifecycle> {
     private let consumable: ConsumableType
 
     init(consumable: ConsumableType) {
@@ -39,32 +39,32 @@ final class ConsumableWrapper<ConsumableType: Consumable>: AbstractConsumable<Co
     }
 
     override func consume(by: @escaping (ConsumableType.Value) -> Void,
-                          on: ConsumableType.Context) -> AnyConsumable<ConsumableType.Value, ConsumableType.Context, ConsumableType.Runtime> {
+                          on: ConsumableType.Executer) -> AnyConsumable<ConsumableType.Value, ConsumableType.Executer, ConsumableType.Lifecycle> {
         return self.consumable.consume(by: by, on: on)
     }
 
-    override func spin() -> ConsumableType.Runtime {
+    override func spin() -> ConsumableType.Lifecycle {
         return self.consumable.spin()
     }
 }
 
 public final class AnyConsumable<AnyValue, AnyContext, AnyRuntime>: Consumable {
     public typealias Value = AnyValue
-    public typealias Context = AnyContext
-    public typealias Runtime = AnyRuntime
+    public typealias Executer = AnyContext
+    public typealias Lifecycle = AnyRuntime
 
-    private let consumable: AbstractConsumable<Value, Context, Runtime>
+    private let consumable: AbstractConsumable<Value, Executer, Lifecycle>
 
     init<ConsumableType: Consumable>(consumable: ConsumableType)
-        where ConsumableType.Value == Value, ConsumableType.Context == AnyContext,  ConsumableType.Runtime == AnyRuntime {
+        where ConsumableType.Value == Value, ConsumableType.Executer == AnyContext,  ConsumableType.Lifecycle == AnyRuntime {
         self.consumable = ConsumableWrapper(consumable: consumable)
     }
 
-    public func consume(by: @escaping (Value) -> Void, on: Context) -> AnyConsumable<Value, Context, Runtime> {
+    public func consume(by: @escaping (Value) -> Void, on: Executer) -> AnyConsumable<Value, Executer, Lifecycle> {
         return self.consumable.consume(by: by, on: on)
     }
 
-    public func spin() -> Runtime {
+    public func spin() -> Lifecycle {
         return self.consumable.spin()
     }
 }
