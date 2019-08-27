@@ -116,3 +116,5 @@ public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRunt
         return self.producer.toReactiveStream()
     }
 }
+
+public typealias Spin = AnyProducer
