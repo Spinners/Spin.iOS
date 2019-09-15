@@ -99,7 +99,7 @@ public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRunt
         where  ProducerType.Input == Input, ProducerType.Value == Value, ProducerType.Executer == Executer, ProducerType.Lifecycle == Lifecycle {
         self.producer = ProducerWrapper(producer: producer)
     }
-    
+
     public func compose<Output: Producer>(function: (Input) -> Output) -> AnyProducer<Output.Input, Output.Value, Output.Executer, Output.Lifecycle> {
         return self.producer.compose(function: function)
     }
