@@ -8,45 +8,48 @@
 
 public protocol Command {
     associatedtype State
-    func execute<Output: Producer>(basedOn state: State) -> Output
+    associatedtype Mutation
+    func execute<Output: Producer>(basedOn state: State) -> Output where Output.Value == Mutation
 }
 
-class AbstractCommand<AbstractState>: Command {
+class AbstractCommand<AbstractState, AbstractMutation>: Command {
     typealias State = AbstractState
-    
-    func execute<Output: Producer>(basedOn state: State) -> Output {
+    typealias Mutation = AbstractMutation
+
+    func execute<Output: Producer>(basedOn state: State) -> Output where Output.Value == Mutation {
         fatalError("must implement")
     }
 }
 
-final class CommandWrapper<CommandType: Command>: AbstractCommand<CommandType.State> {
+final class CommandWrapper<CommandType: Command>: AbstractCommand<CommandType.State, CommandType.Mutation> {
     private let command: CommandType
 
     init(command: CommandType) {
         self.command = command
     }
 
-    override func execute<Output: Producer>(basedOn state: State) -> Output {
+    override func execute<Output: Producer>(basedOn state: State) -> Output where Output.Value == Mutation {
         return self.command.execute(basedOn: state)
     }
 }
 
-public final class AnyCommand<AnyState>: Command {
+public final class AnyCommand<AnyState, AnyMutation>: Command {
     public typealias State = AnyState
+    public typealias Mutation = AnyMutation
 
-    private let command: AbstractCommand<State>
+    private let command: AbstractCommand<State, Mutation>
 
-    init<CommandType: Command>(command: CommandType) where  CommandType.State == State {
+    init<CommandType: Command>(command: CommandType) where CommandType.State == State, CommandType.Mutation == Mutation {
         self.command = CommandWrapper(command: command)
     }
 
-    public func execute<Output: Producer>(basedOn state: State) -> Output {
+    public func execute<Output: Producer>(basedOn state: State) -> Output where Output.Value == Mutation {
         return self.command.execute(basedOn: state)
     }
 }
 
 extension Command {
-    func eraseToAnyCommand() -> AnyCommand<State> {
-        return AnyCommand<State>(command: self)
+    func eraseToAnyCommand() -> AnyCommand<State, Mutation> {
+        return AnyCommand<State, Mutation>(command: self)
     }
 }
