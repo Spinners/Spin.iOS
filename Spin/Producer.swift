@@ -6,12 +6,11 @@
 //  Copyright © 2019 WarpFactor. All rights reserved.
 //
 
-public protocol Producer: ReactiveStream {
+public protocol Producer: ReactiveStream where Value: Command {
     associatedtype Input: Producer where Input.Value == Value, Input.Executer == Executer, Input.Lifecycle == Lifecycle
 
     static func from(function: () -> Input) -> AnyProducer<Input.Input, Value, Executer, Lifecycle>
-    func compose<Output: Producer>(function: (Input) -> Output) -> AnyProducer<Output.Input, Output.Value, Output.Executer, Output.Lifecycle>
-    func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Executer, Lifecycle>
+    func feedback(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle>
     func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle>
     func toReactiveStream() -> Input
 }
@@ -23,12 +22,14 @@ public extension Producer {
 }
 
 public extension Producer {
-    func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result, middlewares: (Result, Value) -> Void...) -> AnyConsumable<Result, Executer, Lifecycle> {
-        let middlewaresAndReducer: (Result, Value) -> Result = { (result, value) -> Result in
-            middlewares.forEach { $0(result, value) }
+    func feedback(initial value: Value.State,
+                  reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State,
+                  spies: (Value.State, Value.Stream.Value) -> Void...) -> AnyConsumable<Value.State, Executer, Lifecycle> {
+        let spiesAndReducer: (Value.State, Value.Stream.Value) -> Value.State = { (result, value) -> Value.State in
+            spies.forEach { $0(result, value) }
             return reducer(result, value)
         }
-        return self.scan(initial: value, reducer: middlewaresAndReducer)
+        return self.feedback(initial: value, reducer: spiesAndReducer)
     }
 }
 
@@ -38,18 +39,14 @@ public extension Producer {
     }
 }
 
-class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractContext, AbstractRuntime>: Producer
-    where AbstractInput.Value == AbstractValue, AbstractInput.Executer == AbstractContext, AbstractInput.Lifecycle == AbstractRuntime {
+class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractExecuter, AbstractLifecycle>: Producer
+where AbstractInput.Value == AbstractValue, AbstractInput.Executer == AbstractExecuter, AbstractInput.Lifecycle == AbstractLifecycle {
     typealias Input = AbstractInput
     typealias Value = AbstractValue
-    typealias Executer = AbstractContext
-    typealias Lifecycle = AbstractRuntime
+    typealias Executer = AbstractExecuter
+    typealias Lifecycle = AbstractLifecycle
 
-    func compose<Output: Producer>(function: (Input) -> Output) -> AnyProducer<Output.Input, Output.Value, Output.Executer, Output.Lifecycle> {
-        fatalError("must implement")
-    }
-
-    func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Executer, Lifecycle> {
+    func feedback(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle> {
         fatalError("must implement")
     }
 
@@ -69,12 +66,8 @@ final class ProducerWrapper<ProducerType: Producer>: AbstractProducer<ProducerTy
         self.producer = producer
     }
 
-    override func compose<Output: Producer>(function: (Input) -> Output) -> AnyProducer<Output.Input, Output.Value, Output.Executer, Output.Lifecycle> {
-        return self.producer.compose(function: function)
-    }
-
-    override func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Executer, Lifecycle> {
-        return self.producer.scan(initial: value, reducer: reducer)
+    override func feedback(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle> {
+        return self.producer.feedback(initial: value, reducer: reducer)
     }
 
     override func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle> {
@@ -86,12 +79,12 @@ final class ProducerWrapper<ProducerType: Producer>: AbstractProducer<ProducerTy
     }
 }
 
-public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRuntime>: Producer
-    where AnyInput.Value == AnyValue, AnyInput.Executer == AnyContext, AnyInput.Lifecycle == AnyRuntime {
+public final class AnyProducer<AnyInput: Producer, AnyValue, AnyExecuter, AnyLifecycle>: Producer
+    where AnyInput.Value == AnyValue, AnyInput.Executer == AnyExecuter, AnyInput.Lifecycle == AnyLifecycle {
     public typealias Input = AnyInput
     public typealias Value = AnyValue
-    public typealias Executer = AnyContext
-    public typealias Lifecycle = AnyRuntime
+    public typealias Executer = AnyExecuter
+    public typealias Lifecycle = AnyLifecycle
 
     private let producer: AbstractProducer<Input, Value, Executer, Lifecycle>
 
@@ -100,12 +93,8 @@ public final class AnyProducer<AnyInput: Producer, AnyValue, AnyContext, AnyRunt
         self.producer = ProducerWrapper(producer: producer)
     }
 
-    public func compose<Output: Producer>(function: (Input) -> Output) -> AnyProducer<Output.Input, Output.Value, Output.Executer, Output.Lifecycle> {
-        return self.producer.compose(function: function)
-    }
-
-    public func scan<Result>(initial value: Result, reducer: @escaping (Result, Value) -> Result) -> AnyConsumable<Result, Executer, Lifecycle> {
-        return self.producer.scan(initial: value, reducer: reducer)
+    public func feedback(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle> {
+        return self.producer.feedback(initial: value, reducer: reducer)
     }
 
     public func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle> {

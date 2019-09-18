@@ -7,49 +7,28 @@
 //
 
 public protocol Command {
+    associatedtype Stream: ReactiveStream
     associatedtype State
-    associatedtype Mutation
-    func execute<Output: Producer>(basedOn state: State) -> Output where Output.Value == Mutation
+    func execute(basedOn state: State) -> Stream
 }
 
-class AbstractCommand<AbstractState, AbstractMutation>: Command {
-    typealias State = AbstractState
-    typealias Mutation = AbstractMutation
-
-    func execute<Output: Producer>(basedOn state: State) -> Output where Output.Value == Mutation {
-        fatalError("must implement")
-    }
-}
-
-final class CommandWrapper<CommandType: Command>: AbstractCommand<CommandType.State, CommandType.Mutation> {
-    private let command: CommandType
-
-    init(command: CommandType) {
-        self.command = command
-    }
-
-    override func execute<Output: Producer>(basedOn state: State) -> Output where Output.Value == Mutation {
-        return self.command.execute(basedOn: state)
-    }
-}
-
-public final class AnyCommand<AnyState, AnyMutation>: Command {
+public class AnyCommand<AnyStream: ReactiveStream, AnyState>: Command {
+    public typealias Stream = AnyStream
     public typealias State = AnyState
-    public typealias Mutation = AnyMutation
-
-    private let command: AbstractCommand<State, Mutation>
-
-    init<CommandType: Command>(command: CommandType) where CommandType.State == State, CommandType.Mutation == Mutation {
-        self.command = CommandWrapper(command: command)
+    
+    private let executeClosure: (State) -> Stream
+    
+    init<CommandType: Command>(command: CommandType) where CommandType.Stream == Stream, CommandType.State == State {
+        self.executeClosure = command.execute
     }
-
-    public func execute<Output: Producer>(basedOn state: State) -> Output where Output.Value == Mutation {
-        return self.command.execute(basedOn: state)
+    
+    public func execute(basedOn state: State) -> Stream {
+        return self.executeClosure(state)
     }
 }
 
-extension Command {
-    func eraseToAnyCommand() -> AnyCommand<State, Mutation> {
-        return AnyCommand<State, Mutation>(command: self)
+public extension Command {
+    func eraseToAnyCommand() -> AnyCommand<Stream, State> {
+        return AnyCommand<Stream, State>(command: self)
     }
 }

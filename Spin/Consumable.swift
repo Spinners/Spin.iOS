@@ -55,8 +55,7 @@ public final class AnyConsumable<AnyValue, AnyContext, AnyRuntime>: Consumable {
 
     private let consumable: AbstractConsumable<Value, Executer, Lifecycle>
 
-    init<ConsumableType: Consumable>(consumable: ConsumableType)
-        where ConsumableType.Value == Value, ConsumableType.Executer == AnyContext,  ConsumableType.Lifecycle == AnyRuntime {
+    init<ConsumableType: Consumable>(consumable: ConsumableType) where ConsumableType.Value == Value, ConsumableType.Executer == Executer,  ConsumableType.Lifecycle == Lifecycle {
         self.consumable = ConsumableWrapper(consumable: consumable)
     }
 
