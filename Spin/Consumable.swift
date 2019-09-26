@@ -17,53 +17,24 @@ public extension Consumable {
     }
 }
 
-class AbstractConsumable<AbstractValue, AbstractContext, AbstractRuntime>: Consumable {
-    typealias Value = AbstractValue
-    typealias Executer = AbstractContext
-    typealias Lifecycle = AbstractRuntime
-
-    func consume(by: @escaping (Value) -> Void, on: Executer) -> AnyConsumable<Value, Executer, Lifecycle> {
-        fatalError("must implement")
-    }
-
-    func spin() -> Lifecycle {
-        fatalError("must implement")
-    }
-}
-
-final class ConsumableWrapper<ConsumableType: Consumable>: AbstractConsumable<ConsumableType.Value, ConsumableType.Executer, ConsumableType.Lifecycle> {
-    private let consumable: ConsumableType
-
-    init(consumable: ConsumableType) {
-        self.consumable = consumable
-    }
-
-    override func consume(by: @escaping (ConsumableType.Value) -> Void,
-                          on: ConsumableType.Executer) -> AnyConsumable<ConsumableType.Value, ConsumableType.Executer, ConsumableType.Lifecycle> {
-        return self.consumable.consume(by: by, on: on)
-    }
-
-    override func spin() -> ConsumableType.Lifecycle {
-        return self.consumable.spin()
-    }
-}
-
-public final class AnyConsumable<AnyValue, AnyContext, AnyRuntime>: Consumable {
+public final class AnyConsumable<AnyValue, AnyExecuter, AnyLifecycle>: Consumable {
     public typealias Value = AnyValue
-    public typealias Executer = AnyContext
-    public typealias Lifecycle = AnyRuntime
+    public typealias Executer = AnyExecuter
+    public typealias Lifecycle = AnyLifecycle
 
-    private let consumable: AbstractConsumable<Value, Executer, Lifecycle>
+    private let consumeClosure: (@escaping (Value) -> Void, Executer) -> AnyConsumable<Value, Executer, Lifecycle>
+    private let spinClosure: () -> Lifecycle
 
     init<ConsumableType: Consumable>(consumable: ConsumableType) where ConsumableType.Value == Value, ConsumableType.Executer == Executer,  ConsumableType.Lifecycle == Lifecycle {
-        self.consumable = ConsumableWrapper(consumable: consumable)
+        self.consumeClosure = consumable.consume
+        self.spinClosure = consumable.spin
     }
 
-    public func consume(by: @escaping (Value) -> Void, on: Executer) -> AnyConsumable<Value, Executer, Lifecycle> {
-        return self.consumable.consume(by: by, on: on)
+    public func consume(by: @escaping (Value) -> Void, on: Executer) -> AnyConsumable<AnyValue, AnyExecuter, AnyLifecycle> {
+        return self.consumeClosure(by, on)
     }
 
-    public func spin() -> Lifecycle {
-        return self.consumable.spin()
+    public func spin() -> AnyLifecycle {
+        return self.spinClosure()
     }
 }

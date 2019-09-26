@@ -12,6 +12,12 @@ public protocol Command {
     func execute(basedOn state: State) -> Stream
 }
 
+public extension Command {
+    func eraseToAnyCommand() -> AnyCommand<Stream, State> {
+        return AnyCommand<Stream, State>(command: self)
+    }
+}
+
 public class AnyCommand<AnyStream: ReactiveStream, AnyState>: Command {
     public typealias Stream = AnyStream
     public typealias State = AnyState
@@ -24,11 +30,5 @@ public class AnyCommand<AnyStream: ReactiveStream, AnyState>: Command {
     
     public func execute(basedOn state: State) -> Stream {
         return self.executeClosure(state)
-    }
-}
-
-public extension Command {
-    func eraseToAnyCommand() -> AnyCommand<Stream, State> {
-        return AnyCommand<Stream, State>(command: self)
     }
 }

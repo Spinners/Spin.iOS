@@ -16,6 +16,12 @@ public protocol Producer: ReactiveStream where Value: Command {
 }
 
 public extension Producer {
+    func eraseToAnyProducer() -> AnyProducer<Input, Value, Executer, Lifecycle> {
+        return AnyProducer(producer: self)
+    }
+}
+
+public extension Producer {
     static func from(function: () -> Input) -> AnyProducer<Input.Input, Value, Executer, Lifecycle> {
         return function().eraseToAnyProducer()
     }
@@ -33,77 +39,35 @@ public extension Producer {
     }
 }
 
-public extension Producer {
-    func eraseToAnyProducer() -> AnyProducer<Input, Value, Executer, Lifecycle> {
-        return AnyProducer(producer: self)
-    }
-}
-
-class AbstractProducer<AbstractInput: Producer, AbstractValue, AbstractExecuter, AbstractLifecycle>: Producer
-where AbstractInput.Value == AbstractValue, AbstractInput.Executer == AbstractExecuter, AbstractInput.Lifecycle == AbstractLifecycle {
-    typealias Input = AbstractInput
-    typealias Value = AbstractValue
-    typealias Executer = AbstractExecuter
-    typealias Lifecycle = AbstractLifecycle
-
-    func feedback(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle> {
-        fatalError("must implement")
-    }
-
-    func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle> {
-        fatalError("must implement")
-    }
-    
-    func toReactiveStream() -> AbstractInput {
-        fatalError("must implement")
-    }
-}
-
-final class ProducerWrapper<ProducerType: Producer>: AbstractProducer<ProducerType.Input, ProducerType.Value, ProducerType.Executer, ProducerType.Lifecycle> {
-    private let producer: ProducerType
-
-    init(producer: ProducerType) {
-        self.producer = producer
-    }
-
-    override func feedback(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle> {
-        return self.producer.feedback(initial: value, reducer: reducer)
-    }
-
-    override func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle> {
-        return self.producer.spy(function: function)
-    }
-    
-    override func toReactiveStream() -> Input {
-        return self.producer.toReactiveStream()
-    }
-}
-
 public final class AnyProducer<AnyInput: Producer, AnyValue, AnyExecuter, AnyLifecycle>: Producer
-    where AnyInput.Value == AnyValue, AnyInput.Executer == AnyExecuter, AnyInput.Lifecycle == AnyLifecycle {
+where AnyInput.Value == AnyValue, AnyInput.Executer == AnyExecuter, AnyInput.Lifecycle == AnyLifecycle {
     public typealias Input = AnyInput
     public typealias Value = AnyValue
     public typealias Executer = AnyExecuter
     public typealias Lifecycle = AnyLifecycle
 
-    private let producer: AbstractProducer<Input, Value, Executer, Lifecycle>
+    private let feedbackClosure: (Value.State, @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle>
+    private let spyClosure: (@escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle>
+    private let toReactiveStreamClosure: () -> Input
 
     init<ProducerType: Producer>(producer: ProducerType)
-        where  ProducerType.Input == Input, ProducerType.Value == Value, ProducerType.Executer == Executer, ProducerType.Lifecycle == Lifecycle {
-        self.producer = ProducerWrapper(producer: producer)
+        where ProducerType.Input == Input, ProducerType.Value == Value, ProducerType.Executer == Executer, ProducerType.Lifecycle == Lifecycle {
+            self.feedbackClosure = producer.feedback
+            self.spyClosure = producer.spy
+            self.toReactiveStreamClosure = producer.toReactiveStream
     }
 
     public func feedback(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle> {
-        return self.producer.feedback(initial: value, reducer: reducer)
+        return self.feedbackClosure(value, reducer)
     }
 
     public func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle> {
-        return self.producer.spy(function: function)
+        return self.spyClosure(function)
     }
-    
+
     public func toReactiveStream() -> Input {
-        return self.producer.toReactiveStream()
+        return self.toReactiveStreamClosure()
     }
 }
 
-public typealias Spin = AnyProducer
+public typealias Spinner = AnyProducer
