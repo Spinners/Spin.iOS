@@ -25,7 +25,7 @@ public final class AnyConsumable<AnyValue, AnyExecuter, AnyLifecycle>: Consumabl
     private let consumeClosure: (@escaping (Value) -> Void, Executer) -> AnyConsumable<Value, Executer, Lifecycle>
     private let spinClosure: () -> Lifecycle
 
-    init<ConsumableType: Consumable>(consumable: ConsumableType) where ConsumableType.Value == Value, ConsumableType.Executer == Executer,  ConsumableType.Lifecycle == Lifecycle {
+    init<ConsumableType: Consumable>(consumable: ConsumableType) where ConsumableType.Value == Value, ConsumableType.Executer == Executer, ConsumableType.Lifecycle == Lifecycle {
         self.consumeClosure = consumable.consume
         self.spinClosure = consumable.spin
     }
@@ -34,7 +34,7 @@ public final class AnyConsumable<AnyValue, AnyExecuter, AnyLifecycle>: Consumabl
         return self.consumeClosure(by, on)
     }
 
-    public func spin() -> AnyLifecycle {
+    public func spin() -> Lifecycle {
         return self.spinClosure()
     }
 }
