@@ -70,7 +70,7 @@ extension MockStream: Consumable {
 extension MockStream: Producer where Element: Command, Element.Stream: StreamType, Element.Stream.Element == Element.Stream.Value {
     typealias Input = MockStream
 
-    func feedback(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle> {
+    func executeAndScan(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle> {
         let newState = reducer(value, self.value.execute(basedOn: value).value)
         self.isFeedbackExecuted = true
         return MockStream<Value.State>(value: newState).eraseToAnyConsumable()
@@ -93,8 +93,8 @@ final class SpinTests: XCTestCase {
     func testAll_actors_in_the_loop_are_executed() {
 
         // Given:
-        let exp = expectation(description: "feedback")
-//        exp.expectedFulfillmentCount = 3
+        let exp = expectation(description: "executeAndScan")
+        //        exp.expectedFulfillmentCount = 3
         exp.expectedFulfillmentCount = 2
 
         let inputStream = MockStream<AnyCommand<MockStream<MockAction>, MockState>>(value: MockCommand().eraseToAnyCommand())
@@ -103,24 +103,24 @@ final class SpinTests: XCTestCase {
         // When: executing a full loop
         Spinner
             .from { return inputStream }
-//            .spy { _ in exp.fulfill() }
+            //            .spy { _ in exp.fulfill() }
             .toReactiveStream()
-            .feedback(initial: MockState(), reducer: { (state, action) -> MockState in
+            .executeAndScan(initial: MockState(), reducer: { (state, action) -> MockState in
                 return MockState()
             }) { (state, action) in
                 feedbackSpyIsCalled = true
                 exp.fulfill()
-            }
-            .spin()
-            .afterSpin {
-                exp.fulfill()
+        }
+        .spin()
+        .afterSpin {
+            exp.fulfill()
         }
 
         waitForExpectations(timeout: 5)
 
         // Then: All actors in the loop are executed
         XCTAssertTrue(feedbackSpyIsCalled)
-//        XCTAssertTrue(inputStream.isSpyExecuted)
+        //        XCTAssertTrue(inputStream.isSpyExecuted)
         XCTAssertTrue(inputStream.isFeedbackExecuted)
         XCTAssertTrue(inputStream.isToReactiveStreamExecuted)
         XCTAssertTrue(inputStream.isFeedbackExecuted)

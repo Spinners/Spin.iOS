@@ -9,8 +9,8 @@
 public protocol Producer: ReactiveStream where Value: Command {
     associatedtype Input: Producer where Input.Value == Value, Input.Executer == Executer, Input.Lifecycle == Lifecycle
 
-    func feedback(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle>
-//        func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle>
+    func executeAndScan(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle>
+    //        func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle>
     func toReactiveStream() -> Input
 }
 
@@ -21,14 +21,14 @@ public extension Producer {
 }
 
 public extension Producer {
-    func feedback(initial value: Value.State,
-                  reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State,
-                  spies: (Value.State, Value.Stream.Value) -> Void...) -> AnyConsumable<Value.State, Executer, Lifecycle> {
+    func executeAndScan(initial value: Value.State,
+                        reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State,
+                        spies: (Value.State, Value.Stream.Value) -> Void...) -> AnyConsumable<Value.State, Executer, Lifecycle> {
         let spiesAndReducer: (Value.State, Value.Stream.Value) -> Value.State = { (result, value) -> Value.State in
             spies.forEach { $0(result, value) }
             return reducer(result, value)
         }
-        return self.feedback(initial: value, reducer: spiesAndReducer)
+        return self.executeAndScan(initial: value, reducer: spiesAndReducer)
     }
 }
 
@@ -40,23 +40,23 @@ where AnyInput.Value == AnyValue, AnyInput.Executer == AnyExecuter, AnyInput.Lif
     public typealias Lifecycle = AnyLifecycle
 
     private let feedbackClosure: (Value.State, @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle>
-//        private let spyClosure: (@escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle>
+    //        private let spyClosure: (@escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle>
     private let toReactiveStreamClosure: () -> Input
-
+    
     init<ProducerType: Producer>(producer: ProducerType)
         where ProducerType.Input == Input, ProducerType.Value == Value, ProducerType.Executer == Executer, ProducerType.Lifecycle == Lifecycle {
-            self.feedbackClosure = producer.feedback
-//                        self.spyClosure = producer.spy
+            self.feedbackClosure = producer.executeAndScan
+            //                        self.spyClosure = producer.spy
             self.toReactiveStreamClosure = producer.toReactiveStream
     }
 
-    public func feedback(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle> {
+    public func executeAndScan(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle> {
         return self.feedbackClosure(value, reducer)
     }
 
-//        public func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle> {
-//            return self.spyClosure(function)
-//        }
+    //        public func spy(function: @escaping (Value) -> Void) -> AnyProducer<Input, Value, Executer, Lifecycle> {
+    //            return self.spyClosure(function)
+    //        }
     
     public func toReactiveStream() -> Input {
         return self.toReactiveStreamClosure()
