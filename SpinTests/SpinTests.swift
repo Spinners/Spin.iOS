@@ -68,7 +68,16 @@ extension MockStream: Consumable {
 }
 
 extension MockStream: Producer where Element: Command, Element.Stream: StreamType, Element.Stream.Element == Element.Stream.Value {
+
     typealias Input = MockStream
+
+//    func merge(function: () -> Input) -> AnyProducer<Input, Value, Executer, Lifecycle> {
+//        return self.eraseToAnyProducer()
+//    }
+//
+//    func merge(input: Input) -> AnyProducer<Input, Value, Executer, Lifecycle> {
+//        return self.eraseToAnyProducer()
+//    }
 
     func executeAndScan(initial value: Value.State, reducer: @escaping (Value.State, Value.Stream.Value) -> Value.State) -> AnyConsumable<Value.State, Executer, Lifecycle> {
         let newState = reducer(value, self.value.execute(basedOn: value).value)
